@@ -35,7 +35,7 @@ Some meta-parameters that can be adjusted are:
 
 The output include stay duration (DT), daily location number (DN), estimated parameter values for each individual, and real&simulated trajectory of each person.
 
-##Step 5 Estimation of the slopt alpha in rank selection probability
+##Step 5 Estimation of the slope alpha in rank selection probability
 
 g++ -O3 RankProbability.cpp -o RankProbability
 
