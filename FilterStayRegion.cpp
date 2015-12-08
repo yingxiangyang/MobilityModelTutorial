@@ -1,6 +1,5 @@
-//usage: g++ -O3 FilterStayReg.cpp -o FilterStayReg
-// ./FilterStayReg > FilterStayReg.txt &
-
+//usage: g++ -O3 FilterStayRegion.cpp -o FilterStayRegion
+// ./FilterStayRegion > FilterStayRegion.txt &
 
 
 #include <iostream>
@@ -35,13 +34,14 @@ int day_end = time_max / 86400;
 int t_day;//the day under calculation
 
 
+
 //store the records of each person 
 vector<double> lons;
 vector<double> lats;
 vector<int> locs;
 vector<int> times;
 vector<int> durations;
-//store the records of each person in one day
+
 vector<double> one_day_lons;
 vector<double> one_day_lats;
 vector<int> one_day_times;
@@ -80,48 +80,49 @@ int counter3 = 0;
 
 
 double deg2rad(double deg) {
-    return (deg * pi / 180);
+	return (deg * pi / 180);
 }
 
 double rad2deg(double rad) {
-    return (rad * 180 / pi);
+	return (rad * 180 / pi);
 }
 
 
 
 double distance(double lat1, double lon1, double lat2, double lon2, char unit) {
-    double theta, dist;
-    theta = lon1 - lon2;
-    dist = sin(deg2rad(lat1)) * sin(deg2rad(lat2)) + cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * cos(deg2rad(theta));
-    dist = acos(dist);
-    dist = rad2deg(dist);
-    dist = dist * 60 * 1.1515;
-    switch (unit) {
-        case 'M':
-            break;
-        case 'K':
-            dist = dist * 1.609344;
-            break;
-        case 'N':
-            dist = dist * 0.8684;
-            break;
-    }
-    return (dist);
+	double theta, dist;
+	theta = lon1 - lon2;
+	dist = sin(deg2rad(lat1)) * sin(deg2rad(lat2)) + cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * cos(deg2rad(theta));
+	dist = acos(dist);
+	dist = rad2deg(dist);
+	dist = dist * 60 * 1.1515;
+	switch (unit) {
+	case 'M':
+		break;
+	case 'K':
+		dist = dist * 1.609344;
+		break;
+	case 'N':
+		dist = dist * 0.8684;
+		break;
+	}
+	return (dist);
 }
 
+
 int main(int argc, char** argv){
-	srand((unsigned)time(NULL));
+    srand((unsigned)time(NULL));
 	string dur_thres = "300";
 	double min_stay_dur = 300;
 	
 	string file_name1 = "StayRegions.txt";
 	string file_name2 = "StayRegionsFiltered.txt";
-
-	//the input file 
+	
+	//the input file
 	ifstream fid_in;
 	fid_in.open(file_name1.c_str(), ifstream::in);
 	FILE * fout_id;
-	fout_id = fopen(file_name2.c_str(), "w");//the percentage of night
+	fout_id = fopen(file_name2.c_str(), "w");
 
 
 	string tline;
@@ -153,6 +154,7 @@ int main(int argc, char** argv){
 	int work_valid_sign;
 	int person_id;
 
+	
 
 	while (getline(fid_in, tline)){
 		stringstream parse_line(tline);
@@ -165,7 +167,6 @@ int main(int argc, char** argv){
 		}
 		
 		
-		//cout<<counter<<" "<< per_count<<" "<<place_count<<endl;
 		if (per_count>personal_limit&&per_count<10000 && place_count>2){
 
 			//read in data and identify home and work
@@ -225,7 +226,6 @@ int main(int argc, char** argv){
 				home_valid_sign = 0;
 			}
 			
-			//original criteria
 			if (home_valid_sign == 1){
 				
 				//if there are too many night departures
@@ -269,95 +269,49 @@ int main(int argc, char** argv){
 				counter2++;
 			}
 			
-			// for people with only home and other
-			if (!home_valid_sign || work_valid_sign){
-				continue;
-			}
-			
-			counter++;
-			if (counter%1000==0){
-				cout<<counter<<endl;
-			}
-			if (counter>1000000){
-				//return 0;
-			}
-			
-			
+
 			//use this user, identify trip duration for each day
 			personal_count = lons.size();
-			if (home_valid_sign){
-				for (t_day = day_begin; t_day<day_end; t_day++){
-					one_day_lons.clear();
-					one_day_lats.clear();
-					one_day_times.clear();
-					one_day_durations.clear();
-					one_day_loc_id.clear();
-					//count the number of filled hours in a day
-					for (int i = 0; i<24; i++){
-						one_day_filled_hours[i] = 0;
-					}
-					for (int i = 0; i<personal_count; i++){
-						current_rec_day = (times[i] - 18000) / 86400 + 1; //boston time,
-						if (current_rec_day == t_day){
-							//one_day_lons.push_back(lons[i]);
-							//one_day_lats.push_back(lats[i]);
-							//one_day_times.push_back(times[i]);
-							//one_day_durations.push_back(durations[i]);
-							//one_day_loc_id.push_back(locs[i]);
+			if (home_valid_sign ){
+                counter++;
+                if (counter%1000==0){
+                    cout<<counter<<endl;
+                }
 
-							//merge consecutive same activities
-							if (one_day_lons.size() == 0 || locs[i] != locs[i - 1]){
-								one_day_lons.push_back(lons[i]);
-								one_day_lats.push_back(lats[i]);
-								one_day_times.push_back(times[i]);
-								one_day_durations.push_back(durations[i]);
-								one_day_loc_id.push_back(locs[i]);
-							}
-							else{
-								one_day_durations[one_day_lons.size() - 1] = one_day_durations[one_day_lons.size() - 1] + durations[i];
-							}
-
-							temp_hour = (int)((times[i] - 18000) % 86400 / 3600.0);
-							if (temp_hour == 24){
-								temp_hour = 0;
-							}
-							one_day_filled_hours[temp_hour] = 1;
-						}
-						else if (current_rec_day>t_day){
-							break;
-						}
-					}
-
-					one_day_count = one_day_lons.size();
-					int filled_hours = 0;
-					for (int j = 0; j<24; j++){
-						filled_hours += one_day_filled_hours[j];
-					}
-					
-					if (filled_hours<filled_hour_thres){
-						continue;
-					}
-					
-					//only select days start and end at home
-					
-					for (int i=0;i<one_day_count;i++){
-						//person id, stay start time, if stay location is home, day
-						//the time is in standard time, not Boston time
-						
-                        if (one_day_loc_id[i]==home){
-                            fprintf(fout_id, "%d %d %d %d %f %f\n",counter1, one_day_times[i], one_day_loc_id[i], 1, one_day_lons[i], one_day_lats[i]);
-                        }
-                        else{
-                            fprintf(fout_id, "%d %d %d %d %f %f\n",counter1, one_day_times[i], one_day_loc_id[i], 0, one_day_lons[i], one_day_lats[i]);
-                        }
-                        
-                        
-					}
-				
+                one_day_lons.clear();
+                one_day_lats.clear();
+                one_day_times.clear();
+                one_day_durations.clear();
+                one_day_loc_id.clear();
+                for (int i = 0; i<personal_count-1; i++){
+                    //merge consecutive same activities, to avoid signal jump
+                    if (one_day_lons.size() == 0 || locs[i] != locs[i - 1]){
+                        one_day_lons.push_back(lons[i]);
+                        one_day_lats.push_back(lats[i]);
+                        one_day_times.push_back(times[i]);
+                        one_day_durations.push_back(times[i+1]-times[i]);
+                        one_day_loc_id.push_back(locs[i]);
+                    }
+                    else{
+                        one_day_durations[one_day_lons.size() - 1] = times[i] - one_day_times[one_day_lons.size() - 1];
+                    }
+                
+                }
+                one_day_count=one_day_lons.size();
+				for (int i=0;i<one_day_count;i++){
+					//person id, stay start time, if stay location is home, day
+					//the time is in standard time, not Boston time
+                    if (one_day_loc_id[i]==home){
+                        fprintf(fout_id, "%d %d %d %d %d %f %f\n",counter, one_day_times[i], 1, t_day, one_day_loc_id[i], one_day_lons[i], one_day_lats[i]);
+                    }
+                    else if (one_day_loc_id[i]==work){
+                        fprintf(fout_id, "%d %d %d %d %d %f %f\n",counter, one_day_times[i], 2, t_day, one_day_loc_id[i], one_day_lons[i], one_day_lats[i]);
+                    }
+                    else{
+                        fprintf(fout_id, "%d %d %d %d %d %f %f\n",counter, one_day_times[i], 0, t_day, one_day_loc_id[i], one_day_lons[i], one_day_lats[i]);
+                    }
 				}
-			}
-			
-
+            }
 		}
 		else{
 			//skip the data

@@ -1,8 +1,9 @@
+%%each section is a plot
 %%
 %dt
-dtReal = load('DTReal.txt');
+dtReal = load('DTRealCommuters');
 dtSimu = load('DTSimuNoN1.txt');
-dtSimuV2 = load('DTSimu.txt');
+dtSimuV2 = load('DTSimuCommuters.txt');
 SemiLogXPlot(dtSimuV2(:,1)/3600,'s','r',900/3600,160000,12)
 hold on
 SemiLogXPlot(dtReal(:,1)/3600,'o','b',900/3600,160000,12)
@@ -16,20 +17,11 @@ set(gca,'XTick',[0.2 1 5 25 125])
 ylim([0 0.4])
 legend('Simu','Data','No beta 1','location','northeast')
 
-
-index1=find(dtReal(:,1)>900 & dtReal(:,1)<160000);
-index2=find(dtSimuV2(:,1)>900 & dtSimuV2(:,1)<160000);
-index3=find(dtSimu(:,1)>900 & dtSimu(:,1)<160000);
-[h,p,KSSTAT] = kstest2(dtReal(index1,1),dtSimuV2(index2,1));
-KSSTAT
-[h,p,KSSTAT] = kstest2(dtReal(index1,1),dtSimu(index3,1));
-KSSTAT
-
 %%
 %P(N)
 load pnavg
-dailyActivityReal = load('DNReal.txt');
-dailyActivitySimu = load('DNSimu.txt');
+dailyActivityReal = load('DNRealCommuters.txt');
+dailyActivitySimu = load('DNSimuCommuters.txt');
 dailyActivitySimuNoN2 = load('DNNoN2.txt');
 [number_count,number]=hist(dailyActivitySimu(:,2),unique(dailyActivitySimu(:,2)));
 [number_count1,number1]=hist(dailyActivitySimuNoN2(:,2),unique(dailyActivitySimuNoN2(:,2)));
@@ -51,43 +43,7 @@ legend('Simulation','Data','No beta 2','Analytic','location','southwest')
 set(gca,'ticklength',3*get(gca,'ticklength'))
 legend('boxoff')
 
-index1=find(dailyActivityReal(:,2)>1 & dailyActivityReal(:,2)<20);
-index2=find(dailyActivitySimu(:,2)>1 & dailyActivitySimu(:,2)<20);
-index3=find(dailyActivitySimuNoN2(:,2)>1 & dailyActivitySimuNoN2(:,2)<20);
-[h,p,KSSTAT] = kstest2(dailyActivityReal(index1,2),dailyActivitySimu(index2,2));
-KSSTAT
-[h,p,KSSTAT] = kstest2(dailyActivityReal(index1,2),dailyActivitySimuNoN2(index3,2));
-KSSTAT
-
-%beta 1 beta 2
-Parameters=load('Parameters.txt');
-b1b2=zeros(21);
-m=size(Parameters,1);
-for i=1:m
-    b1b2(Parameters(i,1)+1,Parameters(i,2)+1)=b1b2(Parameters(i,1)+1,Parameters(i,2)+1)+1;
-end
-b1b2=b1b2./sum(sum(b1b2));
-bar3(b1b2,0.99)
-colormap(jet)
-set(gca,'FontName','Times New Roman','FontSize',15)
-xlabel('beta2','FontName','Times New Roman','FontSize',15)
-ylabel('beta1','FontName','Times New Roman','FontSize',15)
-xlim([0 21.5])
-ylim([0 20.5])
-set(gcf, 'Position', [100 100 400 400])
-
-%nw
-Parameters=load('Parameters.txt');
-index=find(Parameters(:,3)<40);
-[N,X]=hist(Parameters(index,3));
-bar(X,N/sum(N));
-set(gcf, 'Position', [100 100 300 300])
-set(gca,'FontName','Times New Roman','FontSize',18)
-xlabel('nw','FontName','Times New Roman','FontSize',18)
-ylabel('f(nw)','FontName','Times New Roman','FontSize',18)
-set(gca,'XTick',[0 10 20 30 40])
-
-
+%%
 %P(k)
 figure()
 real = load('RP.txt');
@@ -96,7 +52,6 @@ real = [1:m;real];
 unitBin=10;
 PowerLawPlotWeighted(real(:,:)','o','b',0,999999,unitBin);
 xlim([10^1 10^5]);
-%ylim([10^-6 10^-3])
 set(gcf, 'Position', [100 100 300 300])
 set(gca,'XTick',[10^-1,10^0,10^1,10^2,10^3,10^4,10^5])
 xlabel('k','FontName','Times New Roman','FontSize',18)
@@ -105,7 +60,8 @@ set(gca,'FontName','Times New Roman','FontSize',18)
 set(gca,'ticklength',3*get(gca,'ticklength'))
 legend('boxoff')
 
-%P(r)
+%%
+%P(r), ploting exploration trips 
 figure()
 PrData=load('PrData.txt');
 PrSimu=load('PrSimu.txt');
@@ -128,6 +84,25 @@ legend('Simu','Data','location','southwest')
 legend('boxoff')
 
 
+%%P(r) of all the trips
+personReal = load('RealLocCommuters.txt');
+personSimu = load('SimuLocCommuters.txt');
+mReal = size(personReal,1);
+mSimu = size(personSimu,1);
+drReal=zeros(mReal-1,1);
+for i=2:mReal
+    drReal(i-1) = pos2dist(personReal(i,7), personReal(i,6), personReal(i-1,7), personReal(i-1,6), 1);
+end
+drSimu=zeros(mSimu-1,1);
+for i=2:mSimu
+    drSimu(i-1) = pos2dist(personSimu(i,7), personSimu(i,6), personSimu(i-1,7), personSimu(i-1,6), 1);
+end
+PowerLawPlot(drReal,'o','b',0.6,1000,12)
+hold on
+PowerLawPlot(drSimu,'s','r',0.6,1000,12)
+
+
+%%
 %f(L)
 load FL10to20.txt
 load FL20to30.txt
